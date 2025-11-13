@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SK Compiler Interface</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .font-mono {
+            font-family: 'Courier New', Courier, monospace;
+        }
+        /* Simple tab styling */
+        .tab-btn {
+            @apply px-4 py-2 font-medium text-gray-600 rounded-t-lg transition-colors duration-200;
+        }
+        .tab-btn.active {
+            @apply text-blue-600 border-b-2 border-blue-600 bg-white;
+        }
+        .tab-btn:not(.active):hover {
+            @apply bg-gray-100;
+        }
+        .tab-content {
+            @apply hidden;
+        }
+        .tab-content.active {
+            @apply block;
+        }
+        .output-pane {
+            @apply w-full h-96 p-3 border border-gray-600 rounded-md font-mono text-sm bg-black overflow-y-auto;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900 min-h-screen">
+
+    <div class="container mx-auto p-4 md:p-8 max-w-5xl">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-blue-700">SK Compiler Project</h1>
+            <p class="text-xl text-gray-600 mt-2">A web interface for your language</p>
+        </header>
+
+        <!-- Tab Navigation -->
+        <div class="border-b border-gray-200 bg-gray-50 sticky top-0 z-10">
+            <nav class="-mb-px flex justify-center space-x-4" aria-label="Tabs">
+                <button id="tab-grammar-btn" class="tab-btn active" onclick="showTab('grammar')">
+                    Grammar Rules
+                </button>
+                <button id="tab-ide-btn" class="tab-btn" onclick="showTab('ide')">
+                    Compiler IDE
+                </button>
+            </nav>
+        </div>
+
+        <!-- Tab Content -->
+        <main class="mt-6">
+            <!-- Grammar Rules Page (Unchanged) -->
+            <div id="tab-grammar" class="tab-content active bg-white p-6 rounded-lg shadow-sm">
+                <h2 class="text-2xl font-semibold mb-4 text-gray-800 border-b pb-2">Language Grammar</h2>
+                
+                <p class="mb-4 text-gray-700">Here is a summary of the tokens and grammar rules for the SK language, based on your <code>ast.hpp</code> and <code>codegen.cpp</code> files.</p>
+                
+                <section class="mb-6">
+                    <h3 class="text-xl font-semibold mb-3 text-blue-600">Tokens (Lexer)</h3>
+                    <ul class="list-disc list-inside space-y-2">
+                        <li><strong>Keywords:</strong> <code class="font-mono bg-gray-100 px-1 rounded-md">make</code>, <code class="font-mono bg-gray-100 px-1 rounded-md">num</code>, <code class="font-mono bg-gray-100 px-1 rounded-md">text</code>, <code class="font-mono bg-gray-100 px-1 rounded-md">show</code>, <code class="font-mono bg-gray-100 px-1 rounded-md">ask</code>, <code class="font-mono bg-gray-100 px-1 rounded-md">check</code>, <code class="font-mono bg-gray-100 px-1 rounded-md">otherwise</code>, <code class="font-mono bg-gray-100 px-1 rounded-md">during</code>, <code class="font-mono bg-gray-100 px-1 rounded-md">do</code>, <code class="font-mono bg-gray-100 px-1 rounded-md">give</code></li>
+                        <li><strong>Literals:</strong> <code class="font-mono bg-gray-100 px-1 rounded-md">ID</code> (e.g., myVar), <code class="font-mono bg-gray-100 px-1 rounded-md">NUMBER</code> (e.g., 123), <code class="font-mono bg-gray-100 px-1 rounded-md">STRING</code> (e.g., "hello")</li>
+                        <li><strong>Operators:</strong> <code class="font-mono bg-gray-100 px-1 rounded-md">+</code>, <code class="font-mono bg-gray-100 px-1 rounded-md">-</code>, <code class="font-mono bg-gray-100 px-1 rounded-md">*</code>, <code class="font-mono bg-gray-100 px-1 rounded-md">/</code>, <code class="font-mono bg-gray-100 px-1 rounded-md">=</code></li>
+                        <li><strong>Relational:</strong> <code class="font-mono bg-gray-100 px-1 rounded-md">==</code>, <code class="font-mono bg-gray-100 px-1 rounded-md">!=</code>, <code class="font-mono bg-gray-100 px-1 rounded-md">></code>, <code class="font-mono bg-gray-100 px-1 rounded-md"><</code>, <code class="font-mono bg-gray-100 px-1 rounded-md">>=</code>, <code class="font-mono bg-gray-100 px-1 rounded-md"><=</code></li>
+                        <li><strong>Punctuation:</strong> <code class="font-mono bg-gray-100 px-1 rounded-md">;</code>, <code class="font-mono bg-gray-100 px-1 rounded-md">(</code>, <code class="font-mono bg-gray-100 px-1 rounded-md">)</code>, <code class="font-mono bg-gray-100 px-1 rounded-md">{</code>, <code class="font-mono bg-gray-100 px-1 rounded-md">}</code>, <code class="font-mono bg-gray-100 px-1 rounded-md">,</code></li>
+                        <li><strong>Comments:</strong> <code class="font-mono bg-gray-100 px-1 rounded-md">~</code> (to end of line)</li>
+                    </ul>
+                </section>
+                
+                <section>
+                    <h3 class="text-xl font-semibold mb-3 text-blue-600">Grammar Rules (Parser)</h3>
+                    <pre class="bg-gray-800 text-white p-4 rounded-md overflow-x-auto"><code class="font-mono">
+program     : stmt_list
+
+stmt_list   : (stmt)*
+
+stmt        : decl_stmt
+            | assign_stmt
+            | output_stmt
+            | if_stmt
+            | while_stmt
+            | return_stmt
+            | func_def_stmt
+            
+decl_stmt   : MAKE (NUMTYPE | TEXTTYPE) ID (ASSIGN expr)? ';'
+
+assign_stmt : ID ASSIGN expr ';'
+
+output_stmt : SHOW '(' expr (',' expr)* ')' ';'
+
+if_stmt     : CHECK '(' condition ')' '{' stmt_list '}'
+            | CHECK '(' condition ')' '{' stmt_list '}' OTHERWISE '{' stmt_list '}'
+
+while_stmt  : DURING '(' condition ')' '{' stmt_list '}'
+
+return_stmt : GIVE expr ';'
+
+func_def_stmt : ASK ID '(' param_list? ')' '{' stmt_list '}'
+
+condition   : expr (EQ | NE | LT | LE | GT | GE) expr
+
+expr        : term (('+' | '-') term)*
+
+term        : factor (('*' | '/') factor)*
+
+factor      : NUMBER
+            | STRING
+            | ID
+            | ID '(' arg_list? ')'  // Function Call
+            | '(' expr ')'
+                    </code></pre>
+                </section>
+            </div>
+
+            <!-- Compiler IDE Page -->
+            <div id="tab-ide" class="tab-content">
+                <!-- Code Editor -->
+                <div class="bg-white p-6 rounded-lg shadow-sm">
+                    <h2 class="text-2xl font-semibold mb-4 text-gray-800">1. Write SK Code</h2>
+                    <textarea id="codeInput" class="w-full h-96 p-3 border border-gray-300 rounded-md font-mono text-sm bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="make num x = 10;
+show(x);"></textarea>
+                    <button id="compileBtn" class="mt-4 w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-blue-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                        Compile & Run
+                    </button>
+                    <div id="errorArea" class="mt-4 p-3 bg-red-900 text-red-200 border border-red-700 rounded-md font-mono text-sm hidden"></div>
+                </div>
+
+                <!-- Output Panes -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                    <!-- Assembly Output -->
+                    <div class="bg-gray-800 p-6 rounded-lg shadow-sm">
+                        <h2 class="text-2xl font-semibold mb-4 text-gray-100">2. Generated Assembly Output</h2>
+                        <pre id="outputArea" class="output-pane text-green-400"></pre>
+                    </div>
+
+                    <!-- NEW: Console Output -->
+                    <div class="bg-gray-900 p-6 rounded-lg shadow-sm">
+                        <h2 class="text-2xl font-semibold mb-4 text-gray-100">3. Console Output</h2>
+                        <pre id="consoleArea" class="output-pane text-white"></pre>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Tab switching logic
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+            document.getElementById(`tab-${tabName}-btn`).classList.add('active');
+        }
+
+        // --- Compiler (JS Port) ---
+        // Based on your lexer.l, ast.hpp, and codegen.cpp
+
+        // --- 1. LEXER ---
+        const TOKEN_TYPES = {
+            MAKE: 'MAKE', TYPE: 'TYPE', ID: 'ID', ASSIGN: 'ASSIGN', NUMBER: 'NUMBER',
+            SEMI: 'SEMI', SHOW: 'SHOW', LPAREN: 'LPAREN', RPAREN: 'RPAREN', COMMA: 'COMMA',
+            PLUS: 'PLUS', MINUS: 'MINUS', MUL: 'MUL', DIV: 'DIV',
+            STRING: 'STRING', CHECK: 'CHECK', OTHERWISE: 'OTHERWISE',
+            LBRACE: 'LBRACE', RBRACE: 'RBRACE', DURING: 'DURING', GIVE: 'GIVE',
+            EQ: 'EQ', NE: 'NE', GT: 'GT', LT: 'LT', GE: 'GE', LE: 'LE',
+            ASK: 'ASK', DO: 'DO', // 'DO' isn't in your lexer but is in codegen
+            EOF: 'EOF'
+        };
+
+        const TOKEN_REGEX = [
+            { type: TOKEN_TYPES.MAKE, regex: /^make\b/ },
+            { type: TOKEN_TYPES.TYPE, regex: /^(num|text)\b/ },
+            { type: TOKEN_TYPES.SHOW, regex: /^show\b/ },
+            { type: TOKEN_TYPES.CHECK, regex: /^check\b/ },
+            { type: TOKEN_TYPES.OTHERWISE, regex: /^otherwise\b/ },
+            { type: TOKEN_TYPES.DURING, regex: /^during\b/ },
+            { type: TOKEN_TYPES.DO, regex: /^do\b/ },
+            { type: TOKEN_TYPES.GIVE, regex: /^give\b/ },
+            { type: TOKEN_TYPES.ASK, regex: /^ask\b/ },
+            { type: TOKEN_TYPES.EQ, regex: /^==/ },
+            { type: TOKEN_TYPES.NE, regex: /^!=/ },
+            { type: TOKEN_TYPES.GE, regex: /^>=/ },
+            { type: TOKEN_TYPES.LE, regex: /^<=/ },
+            { type: TOKEN_TYPES.GT, regex: /^>/ },
+            { type: TOKEN_TYPES.LT, regex: /^</ },
+            { type: TOKEN_TYPES.ASSIGN, regex: /^=/ },
+            { type: TOKEN_TYPES.SEMI, regex: /^;/ },
+            { type: TOKEN_TYPES.LPAREN, regex: /^\(/ },
+            { type: TOKEN_TYPES.RPAREN, regex: /^\)/ },
+            { type: TOKEN_TYPES.LBRACE, regex: /^\{/ },
+            { type: TOKEN_TYPES.RBRACE, regex: /^\}/ },
+            { type: TOKEN_TYPES.COMMA, regex: /^,/ },
+            { type: TOKEN_TYPES.PLUS, regex: /^\+/ },
+            { type: TOKEN_TYPES.MINUS, regex: /^-/ },
+            { type: TOKEN_TYPES.MUL, regex: /^\*/ },
+            { type: TOKEN_TYPES.DIV, regex: /^\// },
+            { type: TOKEN_TYPES.NUMBER, regex: /^\d+/ },
+            { type: TOKEN_TYPES.ID, regex: /^[a-zA-Z_][a-zA-Z0-9_]*/ },
+            { type: TOKEN_TYPES.STRING, regex: /^"([^"]*)"/ },
+        ];
+
+        function tokenize(code) {
+            let tokens = [];
+            let line = 1;
+            let cursor = 0;
+            while (cursor < code.length) {
+                // Skip whitespace
+                const whitespaceMatch = code.substring(cursor).match(/^[ \t\r\f\v]+/);
+                if (whitespaceMatch) {
+                    cursor += whitespaceMatch[0].length;
+                    continue;
+                }
+                
+                // Skip newlines
+                const newlineMatch = code.substring(cursor).match(/^\n/);
+                if (newlineMatch) {
+                    cursor++;
+                    line++;
+                    continue;
+                }
+
+                // Skip comments
+                const commentMatch = code.substring(cursor).match(/^~.*/);
+                if (commentMatch) {
+                    cursor += commentMatch[0].length;
+                    continue;
+                }
+
+                let matched = false;
+                for (const { type, regex } of TOKEN_REGEX) {
+                    const match = code.substring(cursor).match(regex);
+                    if (match) {
+                        const value = (type === 'STRING') ? match[1] : match[0];
+                        tokens.push({ type, value, line });
+                        cursor += match[0].length;
+                        matched = true;
+                        break;
+                    }
+                }
+                
+                if (!matched) {
+                    throw new Error(`Lexical Error: Unexpected character '${code[cursor]}' on line ${line}`);
+                }
+            }
+            tokens.push({ type: TOKEN_TYPES.EOF, value: 'EOF', line });
+            return tokens;
+        }
+
+        // --- 2. PARSER (Recursive Descent) ---
+        // This builds a JS object AST based on your ast.hpp
+        
+        let tokens = [];
+        let current = 0;
+
+        function parse(inputTokens) {
+            tokens = inputTokens;
+            current = 0;
+            return parseProgram();
+        }
+        
+        function parseProgram() {
+            let statements = [];
+            let functions = [];
+            while (!isAtEnd()) {
+                const stmt = parseStatement();
+                if (stmt.nodeType === 'FunctionDefNode') {
+                    functions.push(stmt);
+                } else {
+                    statements.push(stmt);
+                }
+            }
+            return { nodeType: 'ProgramNode', statements, functions };
+        }
+
+        function parseStatement() {
+            if (match(TOKEN_TYPES.MAKE)) return parseDeclStmt();
+            if (match(TOKEN_TYPES.SHOW)) return parseOutputStmt();
+            if (match(TOKEN_TYPES.CHECK)) return parseIfStmt();
+            if (match(TOKEN_TYPES.DURING)) return parseWhileStmt();
+            if (match(TOKEN_TYPES.GIVE)) return parseReturnStmt();
+            if (match(TOKEN_TYPES.ASK)) return parseFunctionDef();
+            if (peek().type === TOKEN_TYPES.ID && peekNext().type === TOKEN_TYPES.ASSIGN) {
+                return parseAssignStmt();
+            }
+            // Fallback for function call as statement? (Your grammar doesn't specify)
+            // Let's check if it's a function call statement
+            if (peek().type === TOKEN_TYPES.ID && peekNext().type === TOKEN_TYPES.LPAREN) {
+                const expr = parseExpression();
+                consume(TOKEN_TYPES.SEMI, "Expected ';' after function call statement");
+                return { nodeType: 'ExprStmtNode', expr }; // A new node type for this
+            }
+            throw new Error(`Parser Error on line ${peek().line}: Expected statement, got ${peek().type}`);
+        }
+
+        function parseDeclStmt() {
+            const type = consume(TOKEN_TYPES.TYPE, "Expected type 'num' or 'text'").value;
+            const id = consume(TOKEN_TYPES.ID, "Expected variable name").value;
+            let expr = null;
+            if (match(TOKEN_TYPES.ASSIGN)) {
+                expr = parseExpression();
+            }
+            consume(TOKEN_TYPES.SEMI, "Expected ';' after declaration");
+            return { nodeType: 'DeclStmtNode', type, id_name: id, expr };
+        }
+
+        function parseAssignStmt() {
+            const id = consume(TOKEN_TYPES.ID, "Expected variable name").value;
+            consume(TOKEN_TYPES.ASSIGN, "Expected '=' in assignment");
+            const expr = parseExpression();
+            consume(TOKEN_TYPES.SEMI, "Expected ';' after assignment");
+            return { nodeType: 'AssignStmtNode', id_name: id, exprs: expr };
+        }
+
+        function parseOutputStmt() {
+            consume(TOKEN_TYPES.LPAREN, "Expected '(' after 'show'");
+            let exprs = [];
+            if (!check(TOKEN_TYPES.RPAREN)) {
+                do {
+                    exprs.push(parseExpression());
+                } while (match(TOKEN_TYPES.COMMA));
+            }
+            consume(TOKEN_TYPES.RPAREN, "Expected ')' after 'show' arguments");
+            consume(TOKEN_TYPES.SEMI, "Expected ';' after 'show' statement");
+            return { nodeType: 'OutputStmtNode', exprs };
+        }
+        
+        function parseIfStmt() {
+            consume(TOKEN_TYPES.LPAREN, "Expected '(' after 'check'");
+            const condition = parseCondition();
+            consume(TOKEN_TYPES.RPAREN, "Expected ')' after 'check' condition");
+            consume(TOKEN_TYPES.LBRACE, "Expected '{' for 'check' block");
+            let if_block = [];
+            while (!check(TOKEN_TYPES.RBRACE) && !isAtEnd()) {
+                if_block.push(parseStatement());
+            }
+            consume(TOKEN_TYPES.RBRACE, "Expected '}' to close 'check' block");
+            let else_block = [];
+            if (match(TOKEN_TYPES.OTHERWISE)) {
+                consume(TOKEN_TYPES.LBRACE, "Expected '{' for 'otherwise' block");
+                while (!check(TOKEN_TYPES.RBRACE) && !isAtEnd()) {
+                    else_block.push(parseStatement());
+                }
+                consume(TOKEN_TYPES.RBRACE, "Expected '}' to close 'otherwise' block");
+            }
+            return { nodeType: 'IfStmtNode', condition, if_block, else_block };
+        }
+
+        function parseWhileStmt() {
+            consume(TOKEN_TYPES.LPAREN, "Expected '(' after 'during'");
+            const condition = parseCondition();
+            consume(TOKEN_TYPES.RPAREN, "Expected ')' after 'during' condition");
+            consume(TOKEN_TYPES.LBRACE, "Expected '{' for 'during' block");
+            let body = [];
+            while (!check(TOKEN_TYPES.RBRACE) && !isAtEnd()) {
+                body.push(parseStatement());
+            }
+            consume(TOKEN_TYPES.RBRACE, "Expected '}' to close 'during' block");
+            return { nodeType: 'WhileStmtNode', condition, body };
+        }
+
+        function parseReturnStmt() {
+            const expr = parseExpression();
+            consume(TOKEN_TYPES.SEMI, "Expected ';' after 'give' statement");
+            return { nodeType: 'ReturnStmtNode', expr };
+        }
+        
+        function parseFunctionDef() {
+            const name = consume(TOKEN_TYPES.ID, "Expected function name after 'ask'").value;
+            consume(TOKEN_TYPES.LPAREN, "Expected '(' after function name");
+            let params = [];
+            if (!check(TOKEN_TYPES.RPAREN)) {
+                do {
+                    const paramType = consume(TOKEN_TYPES.TYPE, "Expected parameter type 'num' or 'text'").value;
+                    const paramName = consume(TOKEN_TYPES.ID, "Expected parameter name").value;
+                    params.push([paramType, paramName]);
+                } while (match(TOKEN_TYPES.COMMA));
+            }
+            consume(TOKEN_TYPES.RPAREN, "Expected ')' after parameters");
+            consume(TOKEN_TYPES.LBRACE, "Expected '{' for function body");
+            let body = [];
+            while (!check(TOKEN_TYPES.RBRACE) && !isAtEnd()) {
+                body.push(parseStatement());
+            }
+            consume(TOKEN_TYPES.RBRACE, "Expected '}' to close function body");
+            return { nodeType: 'FunctionDefNode', name, params, body };
+        }
+
+        function parseCondition() {
+            const left = parseExpression();
+            const op = consume(
+                [TOKEN_TYPES.EQ, TOKEN_TYPES.NE, TOKEN_TYPES.LT, TOKEN_TYPES.LE, TOKEN_TYPES.GT, TOKEN_TYPES.GE],
+                "Expected comparison operator (==, !=, <, <=, >, >=)"
+            );
+            const right = parseExpression();
+            return { nodeType: 'ConditionNode', left, op: op.type, right };
+        }
+
+        function parseExpression() {
+            let left = parseTerm();
+            while (match(TOKEN_TYPES.PLUS, TOKEN_TYPES.MINUS)) {
+                const op = previous().type;
+                const right = parseTerm();
+                left = { nodeType: 'BinOpNode', left, op, right };
+            }
+            return left;
+        }
+
+        function parseTerm() {
+            let left = parseFactor();
+            while (match(TOKEN_TYPES.MUL, TOKEN_TYPES.DIV)) {
+                const op = previous().type;
+                const right = parseFactor();
+                left = { nodeType: 'BinOpNode', left, op, right };
+            }
+            return left;
+        }
+
+        function parseFactor() {
+            if (match(TOKEN_TYPES.NUMBER)) {
+                return { nodeType: 'NumberNode', value: parseInt(previous().value) };
+            }
+            if (match(TOKEN_TYPES.STRING)) {
+                return { nodeType: 'StringNode', value: previous().value };
+            }
+            if (match(TOKEN_TYPES.ID)) {
+                const idName = previous().value;
+                if (match(TOKEN_TYPES.LPAREN)) { // Function Call
+                    let args = [];
+                    if (!check(TOKEN_TYPES.RPAREN)) {
+                        do {
+                            args.push(parseExpression());
+                        } while (match(TOKEN_TYPES.COMMA));
+                    }
+                    consume(TOKEN_TYPES.RPAREN, "Expected ')' after function arguments");
+                    return { nodeType: 'CallNode', name: idName, args };
+                }
+                return { nodeType: 'IdNode', name: idName }; // Variable
+            }
+            if (match(TOKEN_TYPES.LPAREN)) {
+                const expr = parseExpression();
+                consume(TOKEN_TYPES.RPAREN, "Expected ')' after expression");
+                return expr;
+            }
+            throw new Error(`Parser Error on line ${peek().line}: Expected expression, got ${peek().type}`);
+        }
+
+        // --- Parser Helpers ---
+        function match(...types) {
+            for (const type of types) {
+                if (check(type)) {
+                    advance();
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function consume(type, message) {
+            const types = Array.isArray(type) ? type : [type];
+            if (types.some(t => check(t))) {
+                return advance();
+            }
+            throw new Error(`Parser Error on line ${peek().line}: ${message}`);
+        }
+
+        function check(type) {
+            if (isAtEnd()) return false;
+            return peek().type === type;
+        }
+
+        function advance() {
+            if (!isAtEnd()) current++;
+            return previous();
+        }
+
+        function isAtEnd() {
+            return peek().type === TOKEN_TYPES.EOF;
+        }
+
+        function peek() {
+            return tokens[current];
+        }
+
+        function peekNext() {
+            if (isAtEnd()) return { type: TOKEN_TYPES.EOF };
+            return tokens[current + 1];
+        }
+
+        function previous() {
+            return tokens[current - 1];
+        }
+
+
+        // --- 3. CODE GENERATOR (Port of codegen.cpp) ---
+        // (This class is identical to the previous version)
+        class CodeGenerator {
+            constructor() {
+                this.dataSection = "section .data\n    format_num db \"%d\", 10, 0\n    format_str db \"%s\", 10, 0\n";
+                this.textSection = "section .text\nglobal main\nextern printf\n\n";
+                this.mainFunction = "main:\n    push rbp\n    mov rbp, rsp\n    sub rsp, 64 ; Allocate stack space\n\n";
+                
+                this.stackIndex = 0;
+                this.labelCount = 0;
+                this.stringLiteralCount = 0;
+                this.symbolTable = {}; // Global scope
+                this.functionTypeTable = {};
+                this.textValues = {}; // For static string concat
+                
+                this.currentScope = this.symbolTable;
+                this.scopeStack = [this.symbolTable];
+            }
+
+            newLabel() {
+                return `L${this.labelCount++}`;
+            }
+
+            // --- Scope Management ---
+            enterScope() {
+                const newScope = Object.create(this.currentScope); // Inherit from parent
+                this.scopeStack.push(newScope);
+                this.currentScope = newScope;
+                return newScope;
+            }
+
+            exitScope() {
+                this.scopeStack.pop();
+                this.currentScope = this.scopeStack[this.scopeStack.length - 1];
+            }
+            
+            // --- Symbol Table ---
+            getVar(name) {
+                if (this.currentScope[name]) {
+                    return this.currentScope[name];
+                }
+                throw new Error(`(Compiler) Semantic Error: Use of undeclared variable '${name}'`);
+            }
+            
+            declareVar(name, type) {
+                if (this.currentScope.hasOwnProperty(name)) {
+                    throw new Error(`(Compiler) Semantic Error: Redeclaration of variable '${name}'`);
+                }
+                this.stackIndex += 8;
+                this.currentScope[name] = { offset: this.stackIndex, type: type };
+                return this.currentScope[name];
+            }
+
+            // --- Type & String Helpers (from codegen.cpp) ---
+            getExprType(expr) {
+                if (!expr) return 'void';
+                switch (expr.nodeType) {
+                    case 'NumberNode': return 'num';
+                    case 'StringNode': return 'text';
+                    case 'IdNode':
+                        return this.getVar(expr.name).type;
+                    case 'BinOpNode': {
+                        const left = this.getExprType(expr.left);
+                        const right = this.getExprType(expr.right);
+                        if (expr.op === TOKEN_TYPES.PLUS) {
+                            if (left === "text" && right === "text") return "text";
+                            if (left === "num" && right === "num") return "num";
+                            throw new Error("(Compiler) Semantic Error: Cannot add 'text' and 'num'");
+                        }
+                        if (left === "text" || right === "text") {
+                            throw new Error("(Compiler) Semantic Error: Invalid operator for 'text' type. Only '+' is allowed.");
+                        }
+                        return "num"; // All other ops are numeric
+                    }
+                    case 'CallNode': {
+                         if (this.functionTypeTable[expr.name]) {
+                            return this.functionTypeTable[expr.name];
+                         }
+                         throw new Error(`(Compiler) Semantic Error: Call to undefined function '${expr.name}'`);
+                    }
+                    default: return 'unknown';
+                }
+            }
+
+            getStringValue(expr) {
+                switch (expr.nodeType) {
+                    case 'StringNode': return expr.value;
+                    case 'IdNode':
+                        if (this.textValues[expr.name]) {
+                            return this.textValues[expr.name];
+                        }
+                        return `[runtime_val_${expr.name}]`; 
+                    case 'BinOpNode':
+                        if (expr.op === TOKEN_TYPES.PLUS) {
+                            return this.getStringValue(expr.left) + this.getStringValue(expr.right);
+                        }
+                        return "";
+                    default: return "";
+                }
+            }
+
+            storeStringLiteral(str) {
+                const newLabel = `S${this.stringLiteralCount++}`;
+                this.dataSection += `    ${newLabel} db "${str}", 0\n`;
+                return newLabel;
+            }
+
+            // --- Main Generation Function ---
+            generate(programNode) {
+                try {
+                    for (const func of programNode.functions) {
+                        this.visit(func);
+                    }
+                    for (const stmt of programNode.statements) {
+                        this.mainFunction += this.visit(stmt);
+                    }
+                    this.mainFunction += "\n.exit_program:\n    mov rax, 60\n    mov rdi, 0\n    syscall\n";
+                    return this.dataSection + this.textSection + this.mainFunction;
+                } catch (e) {
+                    throw e; // Re-throw semantic errors
+                }
+            }
+
+            // --- Visitor Methods (Ported from codegen.cpp) ---
+            visit(node) {
+                if (!node) return "";
+                switch (node.nodeType) {
+                    case 'DeclStmtNode': return this.visitDeclStmt(node);
+                    case 'AssignStmtNode': return this.visitAssignStmt(node);
+                    case 'OutputStmtNode': return this.visitOutputStmt(node);
+                    case 'IfStmtNode': return this.visitIfStmt(node);
+                    case 'WhileStmtNode': return this.visitWhileStmt(node);
+                    case 'ReturnStmtNode': return this.visitReturnStmt(node);
+                    case 'FunctionDefNode': return this.visitFunctionDef(node);
+                    case 'ExprStmtNode': return this.visit(node.expr); // Just visit the expression (e.g., a function call)
+                    
+                    // Expressions (return assembly, value in rax)
+                    case 'NumberNode': return this.visitNumber(node);
+                    case 'StringNode': return this.visitString(node);
+                    case 'IdNode': return this.visitId(node);
+                    case 'BinOpNode': return this.visitBinOp(node);
+                    case 'ConditionNode': return this.visitCondition(node);
+                    case 'CallNode': return this.visitCall(node);
+                    
+                    default:
+                        throw new Error(`(Compiler) CodeGenerator Error: Unknown AST node type '${node.nodeType}'`);
+                }
+            }
+            
+            visitDeclStmt(node) {
+                const { offset, type } = this.declareVar(node.id_name, node.type);
+                let asm = `\n; Decl: make ${type} ${node.id_name}\n`;
+                if (node.expr) {
+                    const exprType = this.getExprType(node.expr);
+                    if (type !== exprType) {
+                        throw new Error(`(Compiler) Type Error: Cannot initialize ${type} '${node.id_name}' with ${exprType}`);
+                    }
+                    if (type === 'text') {
+                        this.textValues[node.id_name] = this.getStringValue(node.expr);
+                    }
+                    asm += this.visit(node.expr);
+                    asm += `    mov [rbp - ${offset}], rax ; Store ${node.id_name}\n`;
+                }
+                return asm;
+            }
+            
+            visitAssignStmt(node) {
+                const { offset, type } = this.getVar(node.id_name);
+                const exprType = this.getExprType(node.exprs);
+                if (type !== exprType) {
+                    throw new Error(`(Compiler) Type Error: Cannot assign ${exprType} to ${type} '${node.id_name}'`);
+                }
+                if (type === 'text') {
+                     this.textValues[node.id_name] = this.getStringValue(node.exprs);
+                }
+                let asm = `\n; Assign: ${node.id_name} = ...\n`;
+                asm += this.visit(node.exprs);
+                asm += `    mov [rbp - ${offset}], rax ; Assign to ${node.id_name}\n`;
+                return asm;
+            }
+
+            visitOutputStmt(node) {
+                let asm = `\n; Output: show(...)\n`;
+                for (const expr of node.exprs) {
+                    const exprType = this.getExprType(expr);
+                    asm += this.visit(expr);
+                    if (exprType === 'num') {
+                        asm += "    mov rdi, format_num\n";
+                    } else {
+                        asm += "    mov rdi, format_str\n";
+                    }
+                    asm += "    mov rsi, rax\n    mov rax, 0\n    call printf\n";
+                }
+                return asm;
+            }
+            
+            visitIfStmt(node) {
+                const elseLabel = this.newLabel();
+                const endIfLabel = this.newLabel();
+                let asm = `\n; If: check(...)\n`;
+                asm += this.visit(node.condition); 
+                let jump_op = this.getInvertedJump(node.condition.op);
+                const targetLabel = node.else_block.length > 0 ? elseLabel : endIfLabel;
+                asm += `    ${jump_op} ${targetLabel}\n`;
+                
+                for (const stmt of node.if_block) { asm += this.visit(stmt); }
+                
+                if (node.else_block.length > 0) {
+                    asm += `    jmp ${endIfLabel}\n`;
+                    asm += `${elseLabel}:\n`;
+                     for (const stmt of node.else_block) { asm += this.visit(stmt); }
+                }
+                asm += `${endIfLabel}:\n`;
+                return asm;
+            }
+            
+            visitWhileStmt(node) {
+                const loopStartLabel = this.newLabel();
+                const loopEndLabel = this.newLabel();
+                let asm = `\n; While: during(...)\n`;
+                asm += `${loopStartLabel}:\n`;
+                asm += this.visit(node.condition);
+                let jump_op = this.getInvertedJump(node.condition.op);
+                asm += `    ${jump_op} ${loopEndLabel}\n`;
+                for (const stmt of node.body) { asm += this.visit(stmt); }
+                asm += `    jmp ${loopStartLabel}\n`;
+                asm += `${loopEndLabel}:\n`;
+                return asm;
+            }
+
+            getInvertedJump(op) {
+                switch(op) {
+                    case TOKEN_TYPES.EQ: return 'jne';
+                    case TOKEN_TYPES.NE: return 'je';
+                    case TOKEN_TYPES.LT: return 'jge';
+                    case TOKEN_TYPES.LE: return 'jg';
+                    case TOKEN_TYPES.GT: return 'jle';
+                    case TOKEN_TYPES.GE: return 'jl';
+                    default: throw new Error(`(Compiler) Unknown operator ${op}`);
+                }
+            }
+
+            visitReturnStmt(node) {
+                let asm = "\n; Return: give ...\n";
+                asm += this.visit(node.expr);
+                asm += "    mov rsp, rbp\n    pop rbp\n";
+                asm += "    ret\n"; 
+                return asm;
+            }
+            
+            visitFunctionDef(node) {
+                this.textSection += `\n${node.name}:\n`;
+                this.textSection += "    push rbp\n    mov rbp, rsp\n";
+                
+                const oldStackIndex = this.stackIndex;
+                this.stackIndex = 0; // Reset stack index for function's local scope
+                this.enterScope(); 
+                
+                // Your codegen.cpp logic for 'add' implies args are in rdi, rsi
+                // We store them on the stack as local variables for the function
+                if (node.params.length > 0) {
+                     const p = node.params[0];
+                     const v = this.declareVar(p[1], p[0]); // p[1]=name, p[0]=type
+                     this.textSection += `    mov [rbp - ${v.offset}], rdi ; Store param 1 (${p[1]})\n`;
+                }
+                if (node.params.length > 1) {
+                     const p = node.params[1];
+                     const v = this.declareVar(p[1], p[0]);
+                     this.textSection += `    mov [rbp - ${v.offset}], rsi ; Store param 2 (${p[1]})\n`;
+                }
+                // ... more params would need stack access [rbp+16], etc.
+                
+                this.functionTypeTable[node.name] = "num"; // Your codegen assumes num return
+
+                for (const stmt of node.body) {
+                    this.textSection += this.visit(stmt);
+                }
+
+                // Default return if no 'give'
+                this.textSection += "    mov rsp, rbp\n    pop rbp\n    ret\n";
+                
+                this.exitScope();
+                this.stackIndex = oldStackIndex;
+                return ""; // Definitions are added to textSection, not main
+            }
+
+            // --- Expression Visitors ---
+            visitNumber(node) { return `    mov rax, ${node.value}\n`; }
+            
+            visitString(node) {
+                const label = this.storeStringLiteral(node.value);
+                return `    mov rax, ${label}\n`;
+            }
+            
+            visitId(node) {
+                const { offset, type } = this.getVar(node.name);
+                return `    mov rax, [rbp - ${offset}] ; Load ${node.name}\n`;
+            }
+            
+            visitBinOp(node) {
+                const leftType = this.getExprType(node.left);
+                const rightType = this.getExprType(node.right);
+                
+                if (node.op === TOKEN_TYPES.PLUS && leftType === 'text' && rightType === 'text') {
+                    const constString = this.getStringValue(node);
+                    const label = this.storeStringLiteral(constString);
+                    return `    mov rax, ${label}\n`;
+                }
+
+                if (leftType !== 'num' || rightType !== 'num') {
+                    throw new Error(`(Compiler) Semantic Error: Binary operation requires 'num' types (got ${leftType} and ${rightType})`);
+                }
+                
+                let asm = this.visit(node.right);
+                asm += "    push rax\n";
+                asm += this.visit(node.left);
+                asm += "    pop rbx\n";
+                
+                switch(node.op) {
+                    case TOKEN_TYPES.PLUS: asm += "    add rax, rbx\n"; break;
+                    case TOKEN_TYPES.MINUS: asm += "    sub rax, rbx\n"; break;
+                    case TOKEN_TYPES.MUL: asm += "    imul rax, rbx\n"; break;
+                    case TOKEN_TYPES.DIV:
+                        asm += "    cqo\n";
+                        asm += "    idiv rbx\n";
+                        break;
+                }
+                return asm;
+            }
+            
+            visitCondition(node) {
+                const leftType = this.getExprType(node.left);
+                const rightType = this.getExprType(node.right);
+                if (leftType !== 'num' || rightType !== 'num') {
+                     throw new Error(`(Compiler) Condition Error: Comparisons allowed only between 'num' types.`);
+                }
+                let asm = this.visit(node.right);
+                asm += "    push rax\n";
+                asm += this.visit(node.left);
+                asm += "    pop rbx\n";
+                asm += "    cmp rax, rbx\n";
+                return asm;
+            }
+            
+            visitCall(node) {
+                if (!this.functionTypeTable[node.name]) {
+                    throw new Error(`(Compiler) Semantic Error: Call to undefined function '${node.name}'`);
+                }
+                
+                let asm = `\n; Call: ${node.name}(...)\n`;
+                // Load args into registers (NASM x86-64 Linux ABI)
+                if (node.args.length > 0) {
+                    asm += this.visit(node.args[0]);
+                    asm += "    mov rdi, rax\n";
+                }
+                if (node.args.length > 1) {
+                    asm += this.visit(node.args[1]);
+                    asm += "    mov rsi, rax\n";
+                }
+                // ... more args would go in rdx, rcx, r8, r9
+                asm += `    call ${node.name}\n`;
+                return asm;
+            }
+        }
+
+        // --- 4. NEW: INTERPRETER ---
+        // This runs the AST and produces the "Console Output"
+        class Interpreter {
+            constructor() {
+                this.consoleOutput = "";
+                this.functions = {};
+                this.scopeStack = [{}];
+                this.currentScope = this.scopeStack[0];
+            }
+
+            // --- Scope Helpers ---
+            enterScope() {
+                const newScope = Object.create(this.currentScope);
+                this.scopeStack.push(newScope);
+                this.currentScope = newScope;
+            }
+
+            exitScope() {
+                this.scopeStack.pop();
+                this.currentScope = this.scopeStack[this.scopeStack.length - 1];
+            }
+
+            declareVar(name, value) {
+                if (this.currentScope.hasOwnProperty(name)) {
+                    throw new Error(`(Interpreter) Semantic Error: Redeclaration of variable '${name}'`);
+                }
+                this.currentScope[name] = value;
+            }
+
+            assignVar(name, value) {
+                let scope = this.currentScope;
+                while (scope) {
+                    if (scope.hasOwnProperty(name)) {
+                        scope[name] = value;
+                        return;
+                    }
+                    scope = Object.getPrototypeOf(scope);
+                }
+                throw new Error(`(Interpreter) Semantic Error: Assignment to undeclared variable '${name}'`);
+            }
+
+            getVar(name) {
+                if (this.currentScope[name] !== undefined) {
+                    return this.currentScope[name];
+                }
+                throw new Error(`(Interpreter) Semantic Error: Use of undeclared variable '${name}'`);
+            }
+
+            // --- Main Execution ---
+            run(programNode) {
+                try {
+                    // Register all function definitions
+                    for (const func of programNode.functions) {
+                        this.functions[func.name] = func;
+                    }
+                    // Execute main program statements
+                    this.executeBlock(programNode.statements);
+                    return this.consoleOutput;
+                } catch (e) {
+                    if (e.isReturn) {
+                        throw new Error("(Interpreter) Error: 'give' statement used outside of a function.");
+                    }
+                    throw e;
+                }
+            }
+
+            executeBlock(statements) {
+                for (const stmt of statements) {
+                    this.visit(stmt);
+                }
+            }
+
+            // --- Visitor Methods ---
+            visit(node) {
+                if (!node) return;
+                switch (node.nodeType) {
+                    case 'DeclStmtNode':
+                        let val = null;
+                        if (node.expr) {
+                            val = this.evaluate(node.expr);
+                        }
+                        this.declareVar(node.id_name, val);
+                        return;
+                    case 'AssignStmtNode':
+                        const value = this.evaluate(node.exprs);
+                        this.assignVar(node.id_name, value);
+                        return;
+                    case 'OutputStmtNode':
+                        for (const expr of node.exprs) {
+                            this.consoleOutput += String(this.evaluate(expr)) + "\n";
+                        }
+                        return;
+                    case 'IfStmtNode':
+                        if (this.evaluate(node.condition)) {
+                            this.enterScope();
+                            this.executeBlock(node.if_block);
+                            this.exitScope();
+                        } else if (node.else_block.length > 0) {
+                            this.enterScope();
+                            this.executeBlock(node.else_block);
+                            this.exitScope();
+                        }
+                        return;
+                    case 'WhileStmtNode':
+                        let i = 0;
+                        while (this.evaluate(node.condition)) {
+                            if (i++ > 999) { // Safety break
+                                throw new Error("(Interpreter) Error: Infinite loop detected!");
+                            }
+                            this.enterScope();
+                            this.executeBlock(node.body);
+                            this.exitScope();
+                        }
+                        return;
+                    case 'ReturnStmtNode':
+                        // Use exception for control flow
+                        throw { isReturn: true, value: this.evaluate(node.expr) };
+                    case 'ExprStmtNode':
+                        this.evaluate(node.expr); // Just evaluate it (e.g., function call)
+                        return;
+                    
+                    // Functions are pre-registered, so we don't "visit" a def
+                    case 'FunctionDefNode': return; 
+                        
+                    default:
+                        throw new Error(`(Interpreter) Error: Unknown statement node '${node.nodeType}'`);
+                }
+            }
+
+            // --- Expression Evaluator ---
+            evaluate(expr) {
+                switch (expr.nodeType) {
+                    case 'NumberNode': return expr.value;
+                    case 'StringNode': return expr.value;
+                    case 'IdNode': return this.getVar(expr.name);
+                    case 'BinOpNode': {
+                        const left = this.evaluate(expr.left);
+                        const right = this.evaluate(expr.right);
+                        switch (expr.op) {
+                            // JS '+' handles both num and text concat!
+                            case TOKEN_TYPES.PLUS: return left + right; 
+                            case TOKEN_TYPES.MINUS: return left - right;
+                            case TOKEN_TYPES.MUL: return left * right;
+                            case TOKEN_TYPES.DIV: return Math.floor(left / right); // Integer division
+                        }
+                    }
+                    case 'ConditionNode': {
+                        const left = this.evaluate(expr.left);
+                        const right = this.evaluate(expr.right);
+                        switch (expr.op) {
+                            case TOKEN_TYPES.EQ: return left === right;
+                            case TOKEN_TYPES.NE: return left !== right;
+                            case TOKEN_TYPES.LT: return left < right;
+                            case TOKEN_TYPES.LE: return left <= right;
+                            case TOKEN_TYPES.GT: return left > right;
+                            case TOKEN_TYPES.GE: return left >= right;
+                        }
+                    }
+                    case 'CallNode': {
+                        const func = this.functions[expr.name];
+                        if (!func) {
+                            throw new Error(`(Interpreter) Error: Call to undefined function '${expr.name}'`);
+                        }
+                        if (func.params.length !== expr.args.length) {
+                            throw new Error(`(Interpreter) Error: Function '${expr.name}' expected ${func.params.length} arguments but got ${expr.args.length}`);
+                        }
+                        
+                        const argValues = expr.args.map(arg => this.evaluate(arg));
+                        this.enterScope();
+                        
+                        for(let i = 0; i < func.params.length; i++) {
+                            const [paramType, paramName] = func.params[i];
+                            this.declareVar(paramName, argValues[i]);
+                        }
+                        
+                        let returnValue = null;
+                        try {
+                            this.executeBlock(func.body);
+                        } catch (e) {
+                            if (e.isReturn) {
+                                returnValue = e.value;
+                            } else {
+                                throw e; // Re-throw other errors
+                            }
+                        }
+                        
+                        this.exitScope();
+                        return returnValue;
+                    }
+                    default:
+                        throw new Error(`(Interpreter) Error: Unknown expression node '${expr.nodeType}'`);
+                }
+            }
+        }
+
+
+        // --- MAIN SCRIPT ---
+        const compileBtn = document.getElementById('compileBtn');
+        const codeInput = document.getElementById('codeInput');
+        const outputArea = document.getElementById('outputArea');
+        const consoleArea = document.getElementById('consoleArea'); // New Console
+        const errorArea = document.getElementById('errorArea');
+
+        compileBtn.addEventListener('click', () => {
+            const code = codeInput.value;
+            outputArea.textContent = '';
+            consoleArea.textContent = ''; // Reset console
+            errorArea.textContent = '';
+            errorArea.classList.add('hidden');
+
+            try {
+                // 1. Lexing
+                const tokens = tokenize(code);
+                
+                // 2. Parsing
+                const ast = parse(tokens);
+                
+                // --- 3. Run Interpreter ---
+                try {
+                    const interpreter = new Interpreter();
+                    const consoleOutput = interpreter.run(ast);
+                    consoleArea.textContent = consoleOutput || "(No output)";
+                } catch (e) {
+                    // Show interpreter errors in the console
+                    consoleArea.textContent = e.message;
+                }
+
+                // --- 4. Run Code Generator ---
+                // We create a new generator to get a fresh scope
+                const generator = new CodeGenerator();
+                const assembly = generator.generate(ast);
+                outputArea.textContent = assembly;
+
+            } catch (e) {
+                // Lexer/Parser errors
+                errorArea.textContent = e.message;
+                errorArea.classList.remove('hidden');
+                outputArea.textContent = "; COMPILATION HALTED DUE TO ERROR";
+                consoleArea.textContent = "COMPILATION HALTED DUE TO ERROR";
+            }
+        });
+        
+        // Load some example code
+        codeInput.value = `~ This is an SK language example
+~ Based on your ast.hpp and codegen.cpp
+
+ask add(num a, num b) {
+    give a + b;
+}
+
+make num x = 10;
+make num y = 30;
+
+make num z = add(x, y);
+
+show(z); ~ Should show 40
+
+make text hello = "Hello";
+make text world = " world!";
+make text msg = hello + world;
+
+show(msg); ~ Should show "Hello world!"
+
+check(z > 100) {
+    show("z is large");
+} otherwise {
+    show("z is not large");
+}
+
+make num i = 0;
+during(i < 5) {
+    show(i);
+    i = i + 1;
+}
+
+~ This will cause a type error
+~ make num bad = 10 + "hello";
+`;
+
+    </script>
+</body>
+</html>
