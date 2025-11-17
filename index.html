@@ -38,50 +38,39 @@
 
     <div class="container mx-auto p-4 md:p-8 max-w-5xl">
         <header class="text-center mb-8">
-            <h1 class="text-4xl font-bold text-blue-700">SK Compiler Project</h1>
-            <p class="text-xl text-gray-600 mt-2">A web interface for your language</p>
+            <h1 class="text-4xl font-bold text-blue-700">Compiler for SK Grammar</h1>
+            <p class="text-xl text-gray-600 mt-2">Your way to user friendly language design and Code Generation .</p>
         </header>
 
-        <!-- Tab Navigation -->
-        <div class="border-b border-gray-200 bg-gray-50 sticky top-0 z-10">
-            <nav class="-mb-px flex justify-center space-x-4" aria-label="Tabs">
-                <button id="tab-grammar-btn" class="tab-btn active" onclick="showTab('grammar')">
-                    Grammar Rules
-                </button>
-                <button id="tab-ide-btn" class="tab-btn" onclick="showTab('ide')">
-                    Compiler IDE
-                </button>
-            </nav>
-        </div>
+        
 
         <!-- Tab Content -->
         <main class="mt-6">
             <!-- Grammar Rules Page (Unchanged) -->
             <div id="tab-grammar" class="tab-content active bg-white p-6 rounded-lg shadow-sm">
-                <h2 class="text-2xl font-semibold mb-4 text-gray-800 border-b pb-2">Language Grammar</h2>
+                <h2 class="text-2xl font-semibold mb-4 text-gray-800 border-b pb-2">SK Grammar</h2>
                 
-                <p class="mb-4 text-gray-700">Here is a summary of the tokens and grammar rules for the SK language, based on your <code>ast.hpp</code> and <code>codegen.cpp</code> files.</p>
+              
                 
                 <section class="mb-6">
                     <h3 class="text-xl font-semibold mb-3 text-blue-600">Tokens (Lexer)</h3>
                     <ul class="list-disc list-inside space-y-2">
-                        <li><strong>Keywords:</strong> <code class="font-mono bg-gray-100 px-1 rounded-md">make</code>, <code class="font-mono bg-gray-100 px-1 rounded-md">num</code>, <code class="font-mono bg-gray-100 px-1 rounded-md">text</code>, <code class="font-mono bg-gray-100 px-1 rounded-md">show</code>, <code class="font-mono bg-gray-100 px-1 rounded-md">ask</code>, <code class="font-mono bg-gray-100 px-1 rounded-md">check</code>, <code class="font-mono bg-gray-100 px-1 rounded-md">otherwise</code>, <code class="font-mono bg-gray-100 px-1 rounded-md">during</code>, <code class="font-mono bg-gray-100 px-1 rounded-md">do</code>, <code class="font-mono bg-gray-100 px-1 rounded-md">give</code></li>
-                        <li><strong>Literals:</strong> <code class="font-mono bg-gray-100 px-1 rounded-md">ID</code> (e.g., myVar), <code class="font-mono bg-gray-100 px-1 rounded-md">NUMBER</code> (e.g., 123), <code class="font-mono bg-gray-100 px-1 rounded-md">STRING</code> (e.g., "hello")</li>
-                        <li><strong>Operators:</strong> <code class="font-mono bg-gray-100 px-1 rounded-md">+</code>, <code class="font-mono bg-gray-100 px-1 rounded-md">-</code>, <code class="font-mono bg-gray-100 px-1 rounded-md">*</code>, <code class="font-mono bg-gray-100 px-1 rounded-md">/</code>, <code class="font-mono bg-gray-100 px-1 rounded-md">=</code></li>
-                        <li><strong>Relational:</strong> <code class="font-mono bg-gray-100 px-1 rounded-md">==</code>, <code class="font-mono bg-gray-100 px-1 rounded-md">!=</code>, <code class="font-mono bg-gray-100 px-1 rounded-md">></code>, <code class="font-mono bg-gray-100 px-1 rounded-md"><</code>, <code class="font-mono bg-gray-100 px-1 rounded-md">>=</code>, <code class="font-mono bg-gray-100 px-1 rounded-md"><=</code></li>
+                        <li><strong>Keywords:</strong> <code class="font-mono bg-gray-100 px-1 rounded-md">make</code>, <code class="font-mono bg-gray-100 px-1 rounded-md">num</code>, <code class="font-mono bg-gray-100 px-1 rounded-md">text</code>, <code class="font-mono bg-gray-100 px-1 rounded-md">show</code>, <code class="font-mono bg-gray-100 px-1 rounded-md">check</code>, <code class="font-mono bg-gray-100 px-1 rounded-md">otherwise</code>, <code class="font-mono bg-gray-100 px-1 rounded-md">during</code></li>
+                        <li><strong>Identifiers and Literals:</strong> <code class="font-mono bg-gray-100 px-1 rounded-md">ID</code> (e.g., myVar), <code class="font-mono bg-gray-100 px-1 rounded-md">NUMBER</code> (e.g., 123), <code class="font-mono bg-gray-100 px-1 rounded-md">STRING</code> (e.g., "hello")</li>
+                        <li><strong>Operators:</strong> <code class="font-mono bg-gray-100 px-1 rounded-md">+</code>, <code class="font-mono bg-gray-100 px-1 rounded-md">-</code>, <code class="font-mono bg-gray-100 px-1 rounded-md">*</code>, <code class="font-mono bg-gray-100 px-1 rounded-md">/</code>, <code class="font-mono bg-gray-100 px-1 rounded-md">=</code>,<code class="font-mono bg-gray-100 px-1 rounded-md">==</code>, <code class="font-mono bg-gray-100 px-1 rounded-md">!=</code>, <code class="font-mono bg-gray-100 px-1 rounded-md">></code>, <code class="font-mono bg-gray-100 px-1 rounded-md"><</code>, <code class="font-mono bg-gray-100 px-1 rounded-md">>=</code>, <code class="font-mono bg-gray-100 px-1 rounded-md"><=</code></li>
                         <li><strong>Punctuation:</strong> <code class="font-mono bg-gray-100 px-1 rounded-md">;</code>, <code class="font-mono bg-gray-100 px-1 rounded-md">(</code>, <code class="font-mono bg-gray-100 px-1 rounded-md">)</code>, <code class="font-mono bg-gray-100 px-1 rounded-md">{</code>, <code class="font-mono bg-gray-100 px-1 rounded-md">}</code>, <code class="font-mono bg-gray-100 px-1 rounded-md">,</code></li>
-                        <li><strong>Comments:</strong> <code class="font-mono bg-gray-100 px-1 rounded-md">~</code> (to end of line)</li>
+                        <li><strong>Comments:</strong> <code class="font-mono bg-gray-100 px-1 rounded-md">~</code></li>
                     </ul>
                 </section>
                 
                 <section>
-                    <h3 class="text-xl font-semibold mb-3 text-blue-600">Grammar Rules (Parser)</h3>
+                    <h3 class="text-xl font-semibold mb-3 text-blue-600">Grammar Syntax Rules (Parser)</h3>
                     <pre class="bg-gray-800 text-white p-4 rounded-md overflow-x-auto"><code class="font-mono">
 program → stmt_list
                         
 stmt_list → stmt_list stmt | ε
                         
-stmt → decl_stmt | assign_stmt | output_stmt | if_stmt | while_stmt | func_def_stmt | return_stmt | block
+stmt → decl_stmt | assign_stmt | output_stmt | if_stmt | while_stmt | func_def_stmt |  block
                         
 block → '{' stmt_list '}'
                         
@@ -96,13 +85,7 @@ arg_list → expr (',' expr)* | ε
 if_stmt → CHECK '(' condition ')' stmt | CHECK '(' condition ')' stmt OTHERWISE stmt
                         
 while_stmt → DURING '(' condition ')' stmt
-                        
-func_def_stmt → ASK ID '(' param_list ')' block
-                        
-param_list → (ID (',' ID)*)?
-                        
-return_stmt → GIVE expr ';'
-                        
+                       
 condition → expr relop expr
                         
 relop → '==' | '!=' | '<' | '<=' | '>' | '>='
@@ -111,7 +94,7 @@ expr → expr ('+' | '-') term | term
     
 term → term ('*' | '/') factor | factor
     
-factor → NUMBER | STRING | ID | ID '(' arg_list ')' | '(' expr ')'
+factor → NUMBER | STRING | ID | '(' expr ')'
 
                     </code></pre>
                 </section>
@@ -1110,18 +1093,13 @@ show(x);"></textarea>
         
         // Load some example code
         codeInput.value = `~ This is an SK language example
-~ Based on your ast.hpp and codegen.cpp
 
-ask add(num a, num b) {
-    give a + b;
-}
+
+
 
 make num x = 10;
 make num y = 30;
 
-make num z = add(x, y);
-
-show(z); ~ Should show 40
 
 make text hello = "Hello";
 make text world = " world!";
@@ -1129,10 +1107,10 @@ make text msg = hello + world;
 
 show(msg); ~ Should show "Hello world!"
 
-check(z > 100) {
-    show("z is large");
+check(x > 100) {
+    show("x is large");
 } otherwise {
-    show("z is not large");
+    show("x is not large");
 }
 
 make num i = 0;
